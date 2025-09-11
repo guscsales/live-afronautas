@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "bun --watch src/server.ts",
     "build": "bun build src/server.ts --outdir=dist --target=bun",
+    "build:tsc": "tsc && cp package.json dist/",
     "start": "bun dist/server.js",
+    "start:node": "node dist/server.js",
     "db:migrate": "bun src/database/migrate.ts",
     "format": "biome format --write .",
     "format:check": "biome format .",

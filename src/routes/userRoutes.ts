@@ -5,13 +5,13 @@ import {
   getUserById,
   getUsers,
   updateUser,
-} from '../controllers/userController.ts';
-import { validateBody, validateParams } from '../middleware/validation.ts';
+} from '../controllers/userController';
+import { validateBody, validateParams } from '../middleware/validation';
 import {
   createUserSchema,
   updateUserSchema,
   userIdSchema,
-} from '../schemas/user.ts';
+} from '../schemas/user';
 
 const router = Router();
 

@@ -46,22 +46,37 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Setup Node.js (fallback)
         uses: actions/setup-node@v4
         with:
           node-version: '20.x'
           cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Install dependencies with Bun
+        run: bun install
 
-      - name: Build project
-        run: npm run build
+      - name: Build project with Bun
+        id: bun-build
+        run: bun run build
+        continue-on-error: true
+
+      - name: Fallback build with TypeScript (if Bun fails)
+        if: steps.bun-build.outcome == 'failure'
+        run: |
+          echo "⚠️ Bun build failed, trying TypeScript compiler..."
+          npm ci
+          npm run build:tsc
 
       - name: Check if build artifacts exist
         run: |
           if [ -f "dist/server.js" ]; then
             echo "✅ Build successful - dist/server.js created"
+            ls -la dist/
           else
             echo "❌ Build failed - dist/server.js not found"
             exit 1

@@ -1,8 +1,8 @@
 import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
-import { errorHandler, notFoundHandler } from './middleware/errorHandler.ts';
-import userRoutes from './routes/userRoutes.ts';
+import { errorHandler, notFoundHandler } from './middleware/errorHandler';
+import userRoutes from './routes/userRoutes';
 
 const app = express();
 const PORT = process.env.PORT || 3000;

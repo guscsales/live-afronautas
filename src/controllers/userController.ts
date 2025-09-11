@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
-import pool from '../database/connection.ts';
-import type { CreateUserData, UpdateUserData, User } from '../schemas/user.ts';
+import pool from '../database/connection';
+import type { CreateUserData, UpdateUserData, User } from '../schemas/user';
 
 // GET /users - Listar todos os usuários
 export const getUsers = async (
