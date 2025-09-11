@@ -9,9 +9,46 @@ export const getUsers = async (
 	next: NextFunction
 ) => {
 	try {
-		const result = await pool.query(
-			"SELECT * FROM users ORDER BY created_at DESC"
-		);
+		const {sortBy = "created_at", order = "DESC", search} = req.query;
+
+		// Campos permitidos para ordenação
+		const allowedSortFields = ["id", "name", "email", "age", "created_at"];
+		const allowedOrderValues = ["ASC", "DESC"];
+
+		// Validar campo de ordenação
+		const validSortBy = allowedSortFields.includes(sortBy as string)
+			? (sortBy as string)
+			: "created_at";
+
+		// Validar direção da ordenação
+		const validOrder = allowedOrderValues.includes(
+			(order as string).toUpperCase()
+		)
+			? (order as string).toUpperCase()
+			: "DESC";
+
+		// Construir query com filtros de busca
+		let query = "SELECT * FROM users";
+		const queryParams: any[] = [];
+		let paramCount = 0;
+
+		// Adicionar filtros de busca se fornecidos
+		if (search && typeof search === "string") {
+			const searchTerm = search.trim();
+
+			if (searchTerm) {
+				// Buscar em nome ou email
+				paramCount++;
+				query += ` WHERE (name ILIKE $${paramCount} OR email ILIKE $${paramCount})`;
+				queryParams.push(`%${searchTerm}%`);
+			}
+		}
+
+		// Adicionar ordenação
+		query += ` ORDER BY ${validSortBy} ${validOrder}`;
+
+		const result = await pool.query(query, queryParams);
+
 		res.json({
 			success: true,
 			data: result.rows,
@@ -30,6 +67,7 @@ export const getUserById = async (
 ) => {
 	try {
 		const {id} = req.params;
+
 		const result = await pool.query("SELECT * FROM users WHERE id = $1", [id]);
 
 		if (result.rows.length === 0) {
