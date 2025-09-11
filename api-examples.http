@@ -1,0 +1,89 @@
+# Live Afronautas - Exemplos de API
+# Use este arquivo com a extensão REST Client do VS Code ou similar
+
+### Health Check
+GET http://localhost:3000/health
+
+### Listar todos os usuários
+GET http://localhost:3000/api/users
+
+### Buscar usuário por ID
+GET http://localhost:3000/api/users/1
+
+### Criar novo usuário
+POST http://localhost:3000/api/users
+Content-Type: application/json
+
+{
+  "name": "Ana Silva",
+  "email": "ana@example.com",
+  "age": 28
+}
+
+### Criar usuário sem idade (opcional)
+POST http://localhost:3000/api/users
+Content-Type: application/json
+
+{
+  "name": "Carlos Santos",
+  "email": "carlos@example.com"
+}
+
+### Atualizar usuário (campos opcionais)
+PUT http://localhost:3000/api/users/1
+Content-Type: application/json
+
+{
+  "name": "Ana Santos Silva",
+  "age": 29
+}
+
+### Atualizar apenas o email
+PUT http://localhost:3000/api/users/2
+Content-Type: application/json
+
+{
+  "email": "carlos.santos@example.com"
+}
+
+### Deletar usuário
+DELETE http://localhost:3000/api/users/3
+
+### Teste de validação - Nome muito curto (deve falhar)
+POST http://localhost:3000/api/users
+Content-Type: application/json
+
+{
+  "name": "A",
+  "email": "teste@example.com",
+  "age": 25
+}
+
+### Teste de validação - Email inválido (deve falhar)
+POST http://localhost:3000/api/users
+Content-Type: application/json
+
+{
+  "name": "Teste User",
+  "email": "email-inválido",
+  "age": 25
+}
+
+### Teste de validação - Idade negativa (deve falhar)
+POST http://localhost:3000/api/users
+Content-Type: application/json
+
+{
+  "name": "Teste User",
+  "email": "teste2@example.com",
+  "age": -5
+}
+
+### Teste de email duplicado (deve falhar após criar o primeiro)
+POST http://localhost:3000/api/users
+Content-Type: application/json
+
+{
+  "name": "Usuário Duplicado",
+  "email": "joao@example.com"
+}
