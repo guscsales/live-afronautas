@@ -1,228 +1,228 @@
-import type {Request, Response, NextFunction} from "express";
-import pool from "../database/connection.ts";
-import type {CreateUserData, UpdateUserData, User} from "../schemas/user.ts";
+import type { NextFunction, Request, Response } from 'express';
+import pool from '../database/connection.ts';
+import type { CreateUserData, UpdateUserData, User } from '../schemas/user.ts';
 
 // GET /users - Listar todos os usuários
 export const getUsers = async (
-	req: Request,
-	res: Response,
-	next: NextFunction
+  req: Request,
+  res: Response,
+  next: NextFunction
 ) => {
-	try {
-		const {sortBy = "created_at", order = "DESC", search} = req.query;
+  try {
+    const { sortBy = 'created_at', order = 'DESC', search } = req.query;
 
-		// Campos permitidos para ordenação
-		const allowedSortFields = ["id", "name", "email", "age", "created_at"];
-		const allowedOrderValues = ["ASC", "DESC"];
+    // Campos permitidos para ordenação
+    const allowedSortFields = ['id', 'name', 'email', 'age', 'created_at'];
+    const allowedOrderValues = ['ASC', 'DESC'];
 
-		// Validar campo de ordenação
-		const validSortBy = allowedSortFields.includes(sortBy as string)
-			? (sortBy as string)
-			: "created_at";
+    // Validar campo de ordenação
+    const validSortBy = allowedSortFields.includes(sortBy as string)
+      ? (sortBy as string)
+      : 'created_at';
 
-		// Validar direção da ordenação
-		const validOrder = allowedOrderValues.includes(
-			(order as string).toUpperCase()
-		)
-			? (order as string).toUpperCase()
-			: "DESC";
+    // Validar direção da ordenação
+    const validOrder = allowedOrderValues.includes(
+      (order as string).toUpperCase()
+    )
+      ? (order as string).toUpperCase()
+      : 'DESC';
 
-		// Construir query com filtros de busca
-		let query = "SELECT * FROM users";
-		const queryParams: any[] = [];
-		let paramCount = 0;
+    // Construir query com filtros de busca
+    let query = 'SELECT * FROM users';
+    const queryParams: any[] = [];
+    let paramCount = 0;
 
-		// Adicionar filtros de busca se fornecidos
-		if (search && typeof search === "string") {
-			const searchTerm = search.trim();
+    // Adicionar filtros de busca se fornecidos
+    if (search && typeof search === 'string') {
+      const searchTerm = search.trim();
 
-			if (searchTerm) {
-				// Buscar em nome ou email
-				paramCount++;
-				query += ` WHERE (name ILIKE $${paramCount} OR email ILIKE $${paramCount})`;
-				queryParams.push(`%${searchTerm}%`);
-			}
-		}
+      if (searchTerm) {
+        // Buscar em nome ou email
+        paramCount++;
+        query += ` WHERE (name ILIKE $${paramCount} OR email ILIKE $${paramCount})`;
+        queryParams.push(`%${searchTerm}%`);
+      }
+    }
 
-		// Adicionar ordenação
-		query += ` ORDER BY ${validSortBy} ${validOrder}`;
+    // Adicionar ordenação
+    query += ` ORDER BY ${validSortBy} ${validOrder}`;
 
-		const result = await pool.query(query, queryParams);
+    const result = await pool.query(query, queryParams);
 
-		res.json({
-			success: true,
-			data: result.rows,
-			count: result.rows.length,
-		});
-	} catch (error) {
-		next(error);
-	}
+    res.json({
+      success: true,
+      data: result.rows,
+      count: result.rows.length,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
 // GET /users/:id - Buscar usuário por ID
 export const getUserById = async (
-	req: Request,
-	res: Response,
-	next: NextFunction
+  req: Request,
+  res: Response,
+  next: NextFunction
 ) => {
-	try {
-		const {id} = req.params;
+  try {
+    const { id } = req.params;
 
-		const result = await pool.query("SELECT * FROM users WHERE id = $1", [id]);
+    const result = await pool.query('SELECT * FROM users WHERE id = $1', [id]);
 
-		if (result.rows.length === 0) {
-			return res.status(404).json({
-				success: false,
-				error: "Usuário não encontrado",
-			});
-		}
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Usuário não encontrado',
+      });
+    }
 
-		res.json({
-			success: true,
-			data: result.rows[0],
-		});
-	} catch (error) {
-		next(error);
-	}
+    res.json({
+      success: true,
+      data: result.rows[0],
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
 // POST /users - Criar novo usuário
 export const createUser = async (
-	req: Request,
-	res: Response,
-	next: NextFunction
+  req: Request,
+  res: Response,
+  next: NextFunction
 ) => {
-	try {
-		const userData: CreateUserData = req.body;
+  try {
+    const userData: CreateUserData = req.body;
 
-		const query = `
+    const query = `
       INSERT INTO users (name, email, age)
       VALUES ($1, $2, $3)
       RETURNING *
     `;
 
-		const values = [userData.name, userData.email, userData.age || null];
-		const result = await pool.query(query, values);
+    const values = [userData.name, userData.email, userData.age || null];
+    const result = await pool.query(query, values);
 
-		res.status(201).json({
-			success: true,
-			data: result.rows[0],
-			message: "Usuário criado com sucesso",
-		});
-	} catch (error: any) {
-		// Tratar erro de email duplicado
-		if (error.code === "23505" && error.constraint === "users_email_key") {
-			return res.status(409).json({
-				success: false,
-				error: "Email já está em uso",
-			});
-		}
-		next(error);
-	}
+    res.status(201).json({
+      success: true,
+      data: result.rows[0],
+      message: 'Usuário criado com sucesso',
+    });
+  } catch (error: any) {
+    // Tratar erro de email duplicado
+    if (error.code === '23505' && error.constraint === 'users_email_key') {
+      return res.status(409).json({
+        success: false,
+        error: 'Email já está em uso',
+      });
+    }
+    next(error);
+  }
 };
 
 // PUT /users/:id - Atualizar usuário
 export const updateUser = async (
-	req: Request,
-	res: Response,
-	next: NextFunction
+  req: Request,
+  res: Response,
+  next: NextFunction
 ) => {
-	try {
-		const {id} = req.params;
-		const userData: UpdateUserData = req.body;
+  try {
+    const { id } = req.params;
+    const userData: UpdateUserData = req.body;
 
-		// Verificar se o usuário existe
-		const existingUser = await pool.query("SELECT * FROM users WHERE id = $1", [
-			id,
-		]);
-		if (existingUser.rows.length === 0) {
-			return res.status(404).json({
-				success: false,
-				error: "Usuário não encontrado",
-			});
-		}
+    // Verificar se o usuário existe
+    const existingUser = await pool.query('SELECT * FROM users WHERE id = $1', [
+      id,
+    ]);
+    if (existingUser.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Usuário não encontrado',
+      });
+    }
 
-		// Construir query dinamicamente baseada nos campos fornecidos
-		const updates: string[] = [];
-		const values: any[] = [];
-		let paramCount = 1;
+    // Construir query dinamicamente baseada nos campos fornecidos
+    const updates: string[] = [];
+    const values: any[] = [];
+    let paramCount = 1;
 
-		if (userData.name !== undefined) {
-			updates.push(`name = $${paramCount++}`);
-			values.push(userData.name);
-		}
+    if (userData.name !== undefined) {
+      updates.push(`name = $${paramCount++}`);
+      values.push(userData.name);
+    }
 
-		if (userData.email !== undefined) {
-			updates.push(`email = $${paramCount++}`);
-			values.push(userData.email);
-		}
+    if (userData.email !== undefined) {
+      updates.push(`email = $${paramCount++}`);
+      values.push(userData.email);
+    }
 
-		if (userData.age !== undefined) {
-			updates.push(`age = $${paramCount++}`);
-			values.push(userData.age);
-		}
+    if (userData.age !== undefined) {
+      updates.push(`age = $${paramCount++}`);
+      values.push(userData.age);
+    }
 
-		if (updates.length === 0) {
-			return res.status(400).json({
-				success: false,
-				error: "Nenhum campo para atualizar foi fornecido",
-			});
-		}
+    if (updates.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Nenhum campo para atualizar foi fornecido',
+      });
+    }
 
-		const query = `
+    const query = `
       UPDATE users 
-      SET ${updates.join(", ")}, updated_at = CURRENT_TIMESTAMP
+      SET ${updates.join(', ')}, updated_at = CURRENT_TIMESTAMP
       WHERE id = $${paramCount}
       RETURNING *
     `;
 
-		values.push(id);
-		const result = await pool.query(query, values);
+    values.push(id);
+    const result = await pool.query(query, values);
 
-		res.json({
-			success: true,
-			data: result.rows[0],
-			message: "Usuário atualizado com sucesso",
-		});
-	} catch (error: any) {
-		// Tratar erro de email duplicado
-		if (error.code === "23505" && error.constraint === "users_email_key") {
-			return res.status(409).json({
-				success: false,
-				error: "Email já está em uso",
-			});
-		}
-		next(error);
-	}
+    res.json({
+      success: true,
+      data: result.rows[0],
+      message: 'Usuário atualizado com sucesso',
+    });
+  } catch (error: any) {
+    // Tratar erro de email duplicado
+    if (error.code === '23505' && error.constraint === 'users_email_key') {
+      return res.status(409).json({
+        success: false,
+        error: 'Email já está em uso',
+      });
+    }
+    next(error);
+  }
 };
 
 // DELETE /users/:id - Deletar usuário
 export const deleteUser = async (
-	req: Request,
-	res: Response,
-	next: NextFunction
+  req: Request,
+  res: Response,
+  next: NextFunction
 ) => {
-	try {
-		const {id} = req.params;
+  try {
+    const { id } = req.params;
 
-		const result = await pool.query(
-			"DELETE FROM users WHERE id = $1 RETURNING *",
-			[id]
-		);
+    const result = await pool.query(
+      'DELETE FROM users WHERE id = $1 RETURNING *',
+      [id]
+    );
 
-		if (result.rows.length === 0) {
-			return res.status(404).json({
-				success: false,
-				error: "Usuário não encontrado",
-			});
-		}
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Usuário não encontrado',
+      });
+    }
 
-		res.json({
-			success: true,
-			data: result.rows[0],
-			message: "Usuário deletado com sucesso",
-		});
-	} catch (error) {
-		next(error);
-	}
+    res.json({
+      success: true,
+      data: result.rows[0],
+      message: 'Usuário deletado com sucesso',
+    });
+  } catch (error) {
+    next(error);
+  }
 };
